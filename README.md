@@ -1,12 +1,14 @@
 # symmetry
 ## A Python 3 Script for Determining the Symmetry Point Group of Molecules
 
-Still under development...
+Still under development... 
+
+The features of this script are:
 
 1. Parse input file and read the coordinates of a molecule. The output data is a 2-D Numpy array, replacing the first column, i.e. the element symbols, to the atomic mass. 
 
-	- Gaussian 09 input file in the Cartesian coordinates (implemented)
-	- Other formats of input file (need to be developed)
+	- for Gaussian 09 input file in the Cartesian coordinates (implemented)
+	- for other formats of input file (need to be developed)
 2. Calculate the center of mass of the molecule (CoM) and move the coordinates to the CoM.
 3. Calculate the geometric center (GC) of the molecule.
 4. Calculate the moment of inertia tensor by using the moved coordinates (in step 2).
