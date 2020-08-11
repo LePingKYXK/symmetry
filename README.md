@@ -1,5 +1,12 @@
-# symmetry
+# Symmetry
+
 ## A Python 3 Script for Determining the Symmetry Point Group of Molecules
+### Module Requirement
+
+- Python >= 3.5
+- Numpy >= 1.17
+
+### About the Script
 
 Still under development... 
 
@@ -19,5 +26,5 @@ The features of this script are:
     - if $I_{a} < I_{b} = I_{c}$, then the molecule is a prolate symmetric top
     - if $I_{a} < I_{b} < I_{c}$, then the molecule is an asymmetric top
     - if $I_{a} = 0, I_{b} = I_{c}$, then the molecule is a linear molecule
-    - if CoM = GC, then the molecule has the centrosymmetric 
+    - if CoM = GC, then the molecule is centrosymmetric 
 7. ...
