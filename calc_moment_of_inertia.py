@@ -175,6 +175,19 @@ def find_principal_axes(I):
     return D, np.diag(D) 
 
 
+def classify_molecule(I_abc):
+    Ia, Ib, Ic = I_abc
+    if np.isclose(Ia, Ib):
+        if np.isclose(Ib, Ic):
+            return "Spherical top"
+        return "Oblate symmetric top"
+    if np.isclose(Ib, Ic):
+        if Ia == 0:
+            return "Linear molecule"
+        return "Prolate symmetric top"
+    return "Asymmetric top"
+
+
 def main():
     """
     workflow
@@ -198,13 +211,15 @@ def main():
                                                                   new_coord))))
     I = calc_inertia_tensor(new_coord, data_array[:,0])
     D, I_abc = find_principal_axes(I)
-    return I, D, I_abc
+    mol_type = classify_molecule(I_abc)
+    return I, D, I_abc, mol_type
 
 
 
 if __name__ == "__main__":
-    I, D, I_abc = main()
+    I, D, I_abc, mol_type = main()
     print("The inertia_tensor I is \n{:}\n".format(I))
     print("The diagonalized I is \n{:}\n".format(D))
+    print("The molecule is {:}".format(mol_type))
     print("I_a = {:}\nI_b = {:}\nI_c = {:}\n".format(*I_abc))
     
