@@ -33,7 +33,7 @@ def read_file(filepath, filename, periodic_table):
     print("The directory of input file is:\n{:}\n".format(fullname))
     
     with open(fullname, "r") as fo:
-	    if fullname.suffix in (".gjf", ".com", ".xyz"):
+        if fullname.suffix in (".gjf", ".com", ".xyz"):
             for line in fo:
                 line = line.strip()
                 if line.startswith(tuple(periodic_table.keys())):
