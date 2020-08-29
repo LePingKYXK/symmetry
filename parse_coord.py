@@ -33,11 +33,12 @@ def read_file(filepath, filename, periodic_table):
     print("The directory of input file is:\n{:}\n".format(fullname))
     
     with open(fullname, "r") as fo:
-        for line in fo:
-            line = line.strip()
-            if line.startswith(tuple(periodic_table.keys())):
-                coord.append(line.split())
-    return symbol_to_mass(coord[1:], periodic_table)
+	    if fullname.suffix in (".gjf", ".com", ".xyz"):
+            for line in fo:
+                line = line.strip()
+                if line.startswith(tuple(periodic_table.keys())):
+                    coord.append(line.split())
+        return symbol_to_mass(coord[1:], periodic_table)
 
 
 def symbol_to_mass(coord, periodic_table):
