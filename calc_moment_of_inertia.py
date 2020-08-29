@@ -219,7 +219,7 @@ def main():
 if __name__ == "__main__":
     I, D, I_abc, mol_type = main()
     print("The inertia_tensor I is \n{:}\n".format(I))
-    print("The diagonalized I is \n{:}\n".format(D))
+    print("The diagonalized I is \n{:}\n".format(np.diag(D)))
     print("The molecule is {:}".format(mol_type))
     print("I_a = {:}\nI_b = {:}\nI_c = {:}\n".format(*I_abc))
     

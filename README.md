@@ -3,7 +3,7 @@
 ## A Python 3 Script for Determining the Symmetry Point Group of Molecules
 ### Module Requirement
 
-- Python >= 3.5
+- Python >= 3.7
 - Numpy >= 1.17
 
 ### About the Script
