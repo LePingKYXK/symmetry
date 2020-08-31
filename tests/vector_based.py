@@ -307,7 +307,7 @@ def find_circle_axis(data_array, norm_vecs):
     return 
 
 
-def find_Reflective_plane(data_array):
+def find_reflective_plane(data_array):
     """ This function finds the reflective plane of the molecule.
 
     P0 = (P_i + P_j)/2
@@ -371,7 +371,7 @@ def main(data_array):
     if check_planar(new_coord, normal_vectors, CoM_coord)[0]:
         return "planar"
 
-    if find_Reflective_plane(new_coord):
+    if find_reflective_plane(new_coord):
         return "\sigma_v"
 
     
