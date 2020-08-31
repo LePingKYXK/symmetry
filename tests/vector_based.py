@@ -343,6 +343,7 @@ def main(data_array):
     #filename = input("Please Enter the File Name (e.g. H2O.gjf):\n")
 ##    filepath = args.fpath
 ##    filename = args.fname
+##    tolerance = args.tolerance
 ##    data_array = read_file(filepath, filename, periodic_table)
     print("Input coordinates = \n{:}\n".format(data_array))
     
