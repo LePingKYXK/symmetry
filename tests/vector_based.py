@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from parse_coord import read_file, symbol_to_mass
+#from parse_coord import read_file, symbol_to_mass
 import argparse as ap
+import itertools as it
 import numpy as np
 
 
@@ -18,7 +19,7 @@ to see help:
 python calc_moment_of_inertia.py -h [OR --help]
 
 to run:
-python calc_moment_of_inertia.py PATH FILENAME
+python calc_moment_of_inertia.py PATH FILENAME TOLERANCE
 
 #########################  Let's try it and enjoy! ############################
 """)
@@ -27,6 +28,8 @@ parser.add_argument("-p", "--fpath",
                     action='store_true', help="input file path")
 parser.add_argument("-n", "--fname", 
                     action='store_true', help="input file name")
+parser.add_argument("-t", "--tolerance", 
+                    action='store_true', help="input tolerance")
 
 args = parser.parse_args()
 
@@ -154,6 +157,27 @@ periodic_table = {
 
   
 
+def symbol_to_mass(coord, periodic_table):
+    """ This function replace the element symbols i.e. the first
+    column of Corrdinates to the corresponding mass. Then return
+    the new Corrdinates.
+    
+    ------------------------
+    For instance, the input is
+    H2O = [["O",  0.0,  0.0,  0.0],
+           ["H",  0.7, -0.7,  0.0],
+           ["H", -0.7, -0.7,  0.0]]
+    ==>>
+    output = [[ 8.    0.    0.0  0.  ]
+              [ 1.    0.7  -0.7  0.  ]
+              [ 1.   -0.7  -0.7  0.  ]]
+    """
+    for i in coord:
+        if i[0] in periodic_table.keys():
+            i[0] = periodic_table[i[0]][1]
+    return np.asfarray(coord)
+
+
 def calc_geom_center(data_array):
     """  This function calculates the geometry center of a given data array.
     The format of the input data array is a two dimensional array, which
@@ -182,10 +206,17 @@ def calc_center_of_mass(data_array):
     return np.average(data_array[:,1:], axis=0, weights=data_array[:,0])
 
 
-def calc_distance(data_array):
-    """ This function calculates the distances between two points. 
+def calc_distance(array1, array2):
+    """ This function calculates the distances between two points.
+    
+    parameters:
+    ---------------------------
+    array1:  the coordinates (2D-array) of molecule.
+    array2:  the coordinates (2D-array) of molecule.
+
+    It returns the distance between two input array (elements)
     """
-    diff = data_array[:,np.newaxis,:] - data_array[np.newaxis,:,:]
+    diff = array1[:,np.newaxis,:] - array2[np.newaxis,:,:]
     return np.linalg.norm(diff, axis=-1)
 
 
@@ -250,7 +281,7 @@ def check_planar(data_array, norm_vecs, CoM_coord):
     chk = np.zeros(dot_product.shape)
 ##    print("The dot product is \n{:}\n".format(dot_product))
 ##    print("check zeros array \n{:}\n".format(chk))
-    if np.allclose(dot_product, chk):
+    if np.allclose(dot_product, chk, rtol=1e-6):
         return True, "Planar"
     else:
         return False, "Non-planar"
@@ -274,6 +305,34 @@ def find_circle_axis(data_array, norm_vecs):
     sin_phi = np.sin(2*np.pi/n)
     cos_phi = np.cos(2*np.pi/n)
     return 
+
+
+def find_Reflective_plane(data_array):
+    """ This function finds the reflective plane of the molecule.
+
+    P0 = (P_i + P_j)/2
+    n0 = (P_j - P0) / |P_j - P0|  (with the (a,b,c) components)
+    
+    for theReflective  P'_k,
+        x'_k = x_k + 2 * factor * a
+        y'_k = y_k + 2 * factor * b
+        z'_k = z_k + 2 * factor * c
+        where, factor = n0 \cdot (P_0 - Pk) / |n0|
+        
+    parameters:
+    ---------------------------
+    norm_vecs:   the nornal vectors of the plane spanning by every two position
+               vectors (elements).
+    """
+    p0 = (data_array[:,np.newaxis,:] + data_array[np.newaxis,:,:]) / 2
+
+    for i in it.permutations(range(data_array.shape[0]), 2):
+        n0 = (data_array - p0[i]) / np.linalg.norm(data_array - p0[i])
+        factor = np.dot(n0, p0[i] - data_array) / np.linalg.norm(n0)
+        reflection = data_array + 2 * factor * n0
+        if np.allclose(reflection, data_array, rtol=1e-6):
+            print("\sigma_v")
+
 
 
 def main(data_array):
@@ -309,8 +368,11 @@ def main(data_array):
             return "$D_{\infty h}$"
         return "$C_{\infty v}$"
     
-    elif check_planar(new_coord, normal_vectors, CoM_coord)[0]:
+    if check_planar(new_coord, normal_vectors, CoM_coord)[0]:
         return "planar"
+
+    if find_Reflective_plane(new_coord):
+        return "\sigma_v"
 
     
 ##    return check_planar(new_coord, CoM_coord)
@@ -327,10 +389,10 @@ def main(data_array):
 ###############################################################################
 ###########################    examples for test    ###########################
 ## H2O
-a = [
-["O",    0.00000000,    0.00000000,   -0.11081188],
-["H",    0.00000000,   -0.78397589,    0.44324750],
-["H",   -0.00000000,    0.78397589,    0.44324750]]
+##a = [
+##["O",    0.00000000,    0.00000000,   -0.11081188],
+##["H",    0.00000000,   -0.78397589,    0.44324750],
+##["H",   -0.00000000,    0.78397589,    0.44324750]]
 
 
 #### H2O2
@@ -396,13 +458,13 @@ a = [
 
 
 #### C2H4
-##a = [
-##["C",    0.00000000,   -0.67759997,   0.00000000],
-##["H",    0.92414474,   -1.21655197,   0.00000000],
-##["H",   -0.92414474,   -1.21655197,   0.00000000],
-##["C",    0.00000000,    0.67759997,   0.00000000],
-##["H",   -0.92414474,    1.21655197,   0.00000000],
-##["H",    0.92414474,    1.21655197,   0.00000000]]
+a = [
+["C",    0.00000000,   -0.67759997,   0.00000000],
+["H",    0.92414474,   -1.21655197,   0.00000000],
+["H",   -0.92414474,   -1.21655197,   0.00000000],
+["C",    0.00000000,    0.67759997,   0.00000000],
+["H",   -0.92414474,    1.21655197,   0.00000000],
+["H",    0.92414474,    1.21655197,   0.00000000]]
 
 
 #### C6H6

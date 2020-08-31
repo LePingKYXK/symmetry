@@ -1,127 +1,134 @@
 #!/usr/bin/env python3
 
+import itertools as it
 import numpy as np
+import sympy as sy
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 
+
+#### https://www.ciaaw.org/atomic-weights.htm
+#### https://www.nist.gov/pml/atomic-weights-and-isotopic-compositions-relative-atomic-masses
 dic_periodic_table = {
-"H" :[1  , 1.00797],
-"He":[2  , 4.0026],
-"Li":[3  , 6.939],
-"Be":[4  ,],
-"B" :[5  ,],
-"C" :[6  , 12.01115],
-"N" :[7  , 14.0067],
-"O" :[8  , 15.9994],
-"F" :[9  ,],
-"Ne":[10 ,],
-"Na":[11 ,],
-"Mg":[12 ,],
-"Al":[13 ,],
-"Si":[14 ,],
-"P" :[15 ,],
-"S" :[16 ,],
-"Cl":[17 ,  34.9689],
-"Ar":[18 ,],
-"K" :[19 ,],
-"Ca":[20 ,],
-"Sc":[21 ,],
-"Ti":[22 ,],
-"V" :[23 ,],
-"Cr":[24 ,],
-"Mn":[25 ,],
-"Fe":[26 ,],
-"Co":[27 ,],
-"Ni":[28 ,],
-"Cu":[29 ,],
-"Zn":[30 ,],
-"Ga":[31 ,],
-"Ge":[32 ,],
-"As":[33 ,],
-"Se":[34 ,],
-"Br":[35 ,],
-"Kr":[36 ,],
-"Rb":[37 ,],
-"Sr":[38 ,],
-"Y" :[39 ,],
-"Zr":[40 ,],
-"Nb":[41 ,],
-"Mo":[42 ,],
-"Tc":[43 ,],
-"Ru":[44 ,],
-"Rh":[45 ,],
-"Pd":[46 ,],
-"Ag":[47 ,],
-"Cd":[48 ,],
-"In":[49 ,],
-"Sn":[50 ,],
-"Sb":[51 ,],
-"Te":[52 ,],
-"I" :[53 ,],
-"Xe":[54 ,],
-"Cs":[55 ,],
-"Ba":[56 ,],
-"La":[57 ,],
-"Ce":[58 ,],
-"Pr":[59 ,],
-"Nd":[60 ,],
-"Pm":[61 ,],
-"Sm":[62 ,],
-"Eu":[63 ,],
-"Gd":[64 ,],
-"Tb":[65 ,],
-"Dy":[66 ,],
-"Ho":[67 ,],
-"Er":[68 ,],
-"Tm":[69 ,],
-"Yb":[70 ,],
-"Lu":[71 ,],
-"Hf":[72 ,],
-"Ta":[73 ,],
-"W" :[74 ,],
-"Re":[75 ,],
-"Os":[76 ,],
-"Ir":[77 ,],
-"Pt":[78 ,],
-"Au":[79 ,],
-"Hg":[80 ,],
-"Tl":[81 ,],
-"Pb":[82 ,],
-"Bi":[83 ,],
-"Po":[84 ,],
-"At":[85 ,],
-"Rn":[86 ,],
-"Fr":[87 ,],
-"Ra":[88 ,],
-"Ac":[89 ,],
-"Th":[90 ,],
-"Pa":[91 ,],
-"U" :[92 ,],
-"Np":[93 ,],
-"Pu":[94 ,],
-"Am":[95 ,],
-"Cm":[96 ,],
-"Bk":[97 ,],
-"Cf":[98 ,],
-"Es":[99 ,],
-"Fm":[100,],
-"Md":[101,],
-"No":[102,],
-"Lr":[103,],
-"Rf":[104,],
-"Db":[105,],
-"Sg":[106,],
-"Bh":[107,],
-"Hs":[108,],
-"Mt":[109,],
-"Ds":[110,],
-"Rg":[111,],
-"Cn":[112,],
-"Nh":[113,],
-"Fl":[114,],
-"Mc":[115,],
-"Lv":[116,],
-"Ts":[117,],
-"Og":[118,]}
+"H" :[1  , 1.00784],
+"He":[2  , 4.002602],
+"Li":[3  , 6.938 ],
+"Be":[4  , 9.0121831],
+"B" :[5  , 10.806],
+"C" :[6  , 12.0096],
+"N" :[7  , 14.00643],
+"O" :[8  , 15.99903],
+"F" :[9  , 18.998403163],
+"Ne":[10 , 20.1797],
+"Na":[11 , 22.98976928],
+"Mg":[12 , 24.304],
+"Al":[13 , 26.9815384],
+"Si":[14 , 28.084],
+"P" :[15 , 30.973761998],
+"S" :[16 , 32.059],
+"Cl":[17 , 35.446],
+"Ar":[18 , 39.792],
+"K" :[19 , 39.0983],
+"Ca":[20 , 40.078],
+"Sc":[21 , 44.955908],
+"Ti":[22 , 47.867],
+"V" :[23 , 50.9415],
+"Cr":[24 , 51.9961],
+"Mn":[25 , 54.938043],
+"Fe":[26 , 55.845],
+"Co":[27 , 58.933194],
+"Ni":[28 , 58.6934],
+"Cu":[29 , 63.546],
+"Zn":[30 , 65.38],
+"Ga":[31 , 69.723],
+"Ge":[32 , 72.630],
+"As":[33 , 74.921595],
+"Se":[34 , 78.971],
+"Br":[35 , 79.901],
+"Kr":[36 , 83.798],
+"Rb":[37 , 85.4678],
+"Sr":[38 , 87.62],
+"Y" :[39 , 88.90584],
+"Zr":[40 , 91.224],
+"Nb":[41 , 92.90637],
+"Mo":[42 , 95.95],
+"Tc":[43 , 98.],
+"Ru":[44 , 101.07],
+"Rh":[45 , 102.90549],
+"Pd":[46 , 106.42],
+"Ag":[47 , 107.8682],
+"Cd":[48 , 112.414],
+"In":[49 , 114.818],
+"Sn":[50 , 118.710],
+"Sb":[51 , 121.760],
+"Te":[52 , 127.60],
+"I" :[53 , 126.90447],
+"Xe":[54 , 131.293],
+"Cs":[55 , 132.90545196],
+"Ba":[56 , 137.327],
+"La":[57 , 138.90547],
+"Ce":[58 , 140.116],
+"Pr":[59 , 140.90766],
+"Nd":[60 , 144.242],
+"Pm":[61 , 145.],
+"Sm":[62 , 150.36],
+"Eu":[63 , 151.964],
+"Gd":[64 , 157.25],
+"Tb":[65 , 158.925354],
+"Dy":[66 , 162.500],
+"Ho":[67 , 164.930328],
+"Er":[68 , 167.259],
+"Tm":[69 , 168.934218],
+"Yb":[70 , 173.045],
+"Lu":[71 , 174.9668],
+"Hf":[72 , 178.486],
+"Ta":[73 , 180.94788],
+"W" :[74 , 183.84],
+"Re":[75 , 186.207],
+"Os":[76 , 190.23],
+"Ir":[77 , 192.217],
+"Pt":[78 , 195.084],
+"Au":[79 , 196.966570],
+"Hg":[80 , 200.592],
+"Tl":[81 , 204.382],
+"Pb":[82 , 207.2],
+"Bi":[83 , 208.98040],
+"Po":[84 , 209.],
+"At":[85 , 210.],
+"Rn":[86 , 222.],
+"Fr":[87 , 223.],
+"Ra":[88 , 226.],
+"Ac":[89 , 227.],
+"Th":[90 , 232.0377],
+"Pa":[91 , 231.03588],
+"U" :[92 , 238.02891],
+"Np":[93 , 237.],
+"Pu":[94 , 244.],
+"Am":[95 , 243.],
+"Cm":[96 , 247.],
+"Bk":[97 , 247.],
+"Cf":[98 , 251.],
+"Es":[99 , 252.],
+"Fm":[100, 257.],
+"Md":[101, 258.],
+"No":[102, 259.],
+"Lr":[103, 266.],
+"Rf":[104, 267.],
+"Db":[105, 268.],
+"Sg":[106, 271.],
+"Bh":[107, 270.],
+"Hs":[108, 269.],
+"Mt":[109, 278.],
+"Ds":[110, 281.],
+"Rg":[111, 282.],
+"Cn":[112, 285.],
+"Nh":[113, 286.],
+"Fl":[114, 289.],
+"Mc":[115, 289.],
+"Lv":[116, 293.],
+"Ts":[117, 294.],
+"Og":[118, 294.]}
 
 
 def symbol_to_mass(coord):
@@ -147,11 +154,19 @@ def symbol_to_mass(coord):
     return np.asfarray(coord)
 
 
+def calc_geom_center(data_array):
+    """  This function calculates the geometry center of a given data array.
+    The format of the input data array is a two dimensional array, which
+    contains the x, y, z Cartesion coordinates.
+    It returns a 1-D data array.
+    """
+    return np.average(data_array[:,1:], axis=0)
+
+
 def calc_center_of_mass(data_array):
     """  This function calculates the center of mass of a given data array.
-    The format of the data array is a two dimensional array, which contains
-    the x, y, z Cartesion coordinates and the corresponding mass values for
-    each x, y, z coordinates.
+    The the input data array is a two dimensional array, containing the 
+    x, y, z Cartesion coordinates and their corresponding mass values.
     It returns a 1-D data array.
     """
     return np.average(data_array[:,1:], axis=0, weights=data_array[:,0])
@@ -182,10 +197,61 @@ def find_principal_axes(I):
     diagonalizing the inertia tensor.
     """
     eig_val, eig_vec = np.linalg.eigh(I)
+    print("The eigen values are \n{:}\n".format(eig_val))
     D = np.dot(np.dot(np.linalg.inv(eig_vec), I), eig_vec)
     D = np.around(D, decimals=4)
-    return D, np.diag(D)
+    return eig_vec, D, np.diag(D)
 
+
+####################################################
+def sympy_find_principal_axes(I):
+    I = sy.Matrix(I)
+    P, D = I.diagonalize(I)
+    print("The eigen values are \n{:}\n".format(P))
+    return P, D, np.diag(D)
+####################################################
+
+
+def calc_distance(coord):
+    """ This function calculates the distances between each atoms in 
+    the . 
+    """
+    diff = coord[:,np.newaxis,:] - coord[np.newaxis,:,:]
+    return np.linalg.norm(diff, axis=-1)
+
+
+def classify_molecule(I_abc):
+    Ia, Ib, Ic = I_abc
+    if np.isclose(Ia, Ib):
+        if np.isclose(Ib, Ic):
+            return "Spherical top"
+        return "Oblate symmetric top"
+    if np.isclose(Ib, Ic):
+        if Ia == 0:
+            return "Linear molecule"
+        return "Prolate symmetric top"
+    return "Asymmetric top"
+
+
+def visualization(CoM_coord, eig_vec, new_coord):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    vlen = np.linalg.norm(eig_vec)
+    X, Y, Z = CoM_coord
+    U, V, W = eig_vec
+    ax.quiver(X, Y, Z, U, V, W, pivot='tail',
+              length=vlen, arrow_length_ratio=0.2/vlen)
+
+    ax.scatter(new_coord[:,0], new_coord[:,1], new_coord[:,2],
+               color="r", marker="o", s=50)
+    ax.set_xlim([new_coord.min(),new_coord.max()])
+    ax.set_ylim([new_coord.min(),new_coord.max()])
+    ax.set_zlim([new_coord.min(),new_coord.max()])
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+    plt.show()
+    
 
 def main(data_array):
     """
@@ -198,13 +264,23 @@ def main(data_array):
           
     CoM_coord = calc_center_of_mass(data_array)
     print("Center of Mass = \n{:}\n".format(CoM_coord))
+
+    GC_coord = calc_geom_center(data_array)
+    print("Geometry Center = \n{:}\n".format(GC_coord))
+    print("overlap or not? {:}\n".format(np.allclose(CoM_coord, GC_coord, rtol=1e-4)))
     
     new_coord = data_array[:,1:] - CoM_coord
     print("shifted coordinates = \n{:}\n".format(np.column_stack((data_array[:,0],
                                                                   new_coord))))
     I = calc_inertia_tensor(new_coord, data_array[:,0])
-    D, I_abc = find_principal_axes(I)
-    return I, D, I_abc
+##    shifted_coord = new_coord - CoM_coord
+##    I = calc_inertia_tensor(shifted_coord, data_array[:,0])
+    eig_vec, D, I_abc = find_principal_axes(I)
+    mol_type = classify_molecule(I_abc)
+    
+    dist_matrix = calc_distance(np.row_stack((CoM_coord,new_coord)))
+    return I, eig_vec, D, I_abc, mol_type, CoM_coord, new_coord, dist_matrix
+##    return I, eig_vec, D, I_abc, mol_type, CoM_coord, shifted_coord, dist_matrix
 
 
 ###############################################################################
@@ -226,17 +302,17 @@ a = [
 
 #### NH3
 ##a = [ 
-##["N",  0     ,   0     ,   0],
-##["H",  0     ,  -0.9377,  -0.3816],
+##["N",  0.    ,   0.    ,   0.    ],
+##["H",  0.    ,  -0.9377,  -0.3816],
 ##["H",  0.8121,   0.4689,  -0.3816],
 ##["H", -0.8121,   0.4689,  -0.3816]]
 
 
 #### CH3Cl
 ##a = [
-##["C" ,  0     ,   0     ,   0     ], 
-##["Cl",  0     ,   0     ,   1.7810],
-##["H" ,  1.0424,   0     ,  -0.3901],
+##["C" ,  0.    ,   0.    ,   0.    ], 
+##["Cl",  0.    ,   0.    ,   1.7810],
+##["H" ,  1.0424,   0.    ,  -0.3901],
 ##["H" , -0.5212,   0.9027,  -0.3901],
 ##["H" , -0.5212,  -0.9027,  -0.3901]]
 
@@ -247,6 +323,13 @@ a = [
 ##["H" ,    -0.48282514,   -0.71001494,    0.00000000]]
 
 
+#### HCN
+##a = [
+##["C",   0.00000000,   0.00000000,   -0.49687143],
+##["H",   0.00000000,   0.00000000,   -1.56687143],
+##["N",   0.00000000,   0.00000000,    0.64972857]]
+
+
 #### CO2
 ##a = [
 ##["C",     -0.39214687,   -0.78171310,    0.01418586],
@@ -254,13 +337,31 @@ a = [
 ##["O",      0.86625313,   -0.78171310,    0.01418586]]
 
 
+#### C2H2
+##a = [
+##["C",   -0.00000000,   -0.00000000,   -0.60060000],
+##["H",   -0.00000000,   -0.00000000,   -1.67060000],
+##["C",    0.00000000,   -0.00000000,    0.60060000],
+##["H",    0.00000000,   -0.00000000,    1.67060000]]
+
+
 #### CH4
 ##a = [
-##["C",        0,        0,        0],
+##["C",   0.    ,   0.    ,   0.    ],
 ##["H",   0.6276,   0.6276,   0.6276],
 ##["H",   0.6276,  -0.6276,  -0.6276],
 ##["H",  -0.6276,   0.6276,  -0.6276],
-##["H",  -0.6276,  -0.6276,   0.6276]])
+##["H",  -0.6276,  -0.6276,   0.6276]]
+
+
+#### C2H4
+##a = [
+##["C",    0.00000000,   -0.67759997,   0.00000000],
+##["H",    0.92414474,   -1.21655197,   0.00000000],
+##["H",   -0.92414474,   -1.21655197,   0.00000000],
+##["C",    0.00000000,    0.67759997,   0.00000000],
+##["H",   -0.92414474,    1.21655197,   0.00000000],
+##["H",    0.92414474,    1.21655197,   0.00000000]]
 
 
 #### C6H6
@@ -321,18 +422,18 @@ a = [
 
 #### O3
 ##a = [
-##["O",  0      ,  0     ,   0     ], 
-##["O",  0      ,  1.0885,   0.6697],
-##["O",  0      , -1.0885,   0.6697]]
+##["O",  0.     ,  0.    ,   0.    ], 
+##["O",  0.     ,  1.0885,   0.6697],
+##["O",  0.     , -1.0885,   0.6697]]
 
 
 #### additional test 1, CH4
 ##a = [
-##["C",   0.92675632,   1.54708518,   0.00000000],
-##["H",   1.28341074,   0.53827518,   0.00000000],
-##["H",   1.28342916,   2.05148337,   0.87365150],
-##["H",   1.28342916,   2.05148337,  -0.87365150],
-##["H",  -0.14324368,   1.54709836,   0.00000000]]
+##["C",   0.38000200,  -0.60132300,   0.00000000],
+##["H",   0.73665643,  -1.61013300,   0.00000000],
+##["H",   0.73667484,  -0.09692481,   0.87365150],
+##["H",   0.73667484,  -0.09692481,  -0.87365150],
+##["H",  -0.68999800,  -0.60130982,   0.00000000]]
 
 
 #### additional test 2, CH4
@@ -344,8 +445,17 @@ a = [
 ##["H",  -1.86222718,  -0.63526334,   0.00000000]]
 
 
+#### additional test 3, CH4
+##a = [
+##["C",   0.00000000,   0.00000000,   0.00000000],
+##["H",   0.00000000,   0.00000000,   1.06999995],
+##["H",   0.00000000,  -1.00880563,  -0.35666665],
+##["H",  -0.87365130,   0.50440282,  -0.35666665],
+##["H",   0.87365130,   0.50440282,  -0.35666665]]
+
+
 #### additional test 3, H+(H2O)3
-##a = np.array([
+##a = [
 ##[1., -3.2613969123, -0.6233043579,  0.6815344812],
 ##[8., -2.3118608248,  0.1524013963,  0.3721500130],
 ##[1., -2.4249335008,  1.1246183202,  0.5593911943],
@@ -428,8 +538,17 @@ a = [
     
 
 if __name__ == "__main__":
-    I, D, I_abc = main(a)
+    I, eig_vec, D, I_abc, mol_type, CoM_coord, new_coord, dist_matrix = main(a)
+##    I, eig_vec, D, I_abc, mol_type, CoM_coord, shifted_coord, dist_matrix = main(a)
     print("The inertia_tensor I is \n{:}\n".format(I))
     print("The diagonalized I is \n{:}\n".format(D))
+    print("The molecule is {:}".format(mol_type))
     print("I_a = {:}\nI_b = {:}\nI_c = {:}\n".format(*I_abc))
-    
+    print("The eigen vectors are \n{:}\n".format(eig_vec))
+    print("The center of mass \n{:}\n".format(CoM_coord))
+    print("The shifted coordinates \n{:}\n".format(new_coord))
+##    print("The center of mass \n{:}\n".format(CoM_coord - CoM_coord))
+##    print("The shifted coordinates \n{:}\n".format(shifted_coord))
+    print("The distance matrix \n{:}\n".format(dist_matrix))
+    visualization(CoM_coord, eig_vec, new_coord)
+##    visualization(CoM_coord - CoM_coord, eig_vec, shifted_coord)
