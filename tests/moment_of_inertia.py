@@ -154,25 +154,25 @@ def symbol_to_mass(coord):
     return np.asfarray(coord)
 
 
-def calc_geom_center(data_array):
+def calc_geom_center(array):
     """  This function calculates the geometry center of a given data array.
     The format of the input data array is a two dimensional array, which
     contains the x, y, z Cartesion coordinates.
     It returns a 1-D data array.
     """
-    return np.average(data_array[:,1:], axis=0)
+    return np.average(array, axis=0)
 
 
-def calc_center_of_mass(data_array):
+def calc_center_of_mass(array):
     """  This function calculates the center of mass of a given data array.
     The the input data array is a two dimensional array, containing the 
     x, y, z Cartesion coordinates and their corresponding mass values.
     It returns a 1-D data array.
     """
-    return np.average(data_array[:,1:], axis=0, weights=data_array[:,0])
+    return np.average(array[:,1:], axis=0, weights=array[:,0])
 
 
-def calc_inertia_tensor(new_coord, mass):
+def calc_inertia_tensor(array, mass):
     """  This function calculates the Elements of inertia tensor for the
     moved centered coordinates.
     
@@ -180,36 +180,27 @@ def calc_inertia_tensor(new_coord, mass):
     the mass of elements (the first column) and their corresponded x, y, z
     Cartesion coordinates.
     """
-    I_xx = (mass * np.sum(np.square(new_coord[:,1:3:1]),axis=1)).sum()
-    I_yy = (mass * np.sum(np.square(new_coord[:,0:3:2]),axis=1)).sum()
-    I_zz = (mass * np.sum(np.square(new_coord[:,0:2:1]),axis=1)).sum()
-    I_xy = (-1 * mass * np.prod(new_coord[:,0:2:1],axis=1)).sum()
-    I_yz = (-1 * mass * np.prod(new_coord[:,1:3:1],axis=1)).sum()
-    I_xz = (-1 * mass * np.prod(new_coord[:,0:3:2],axis=1)).sum()
+    I_xx = (mass * np.sum(np.square(array[:,1:3:1]),axis=1)).sum()
+    I_yy = (mass * np.sum(np.square(array[:,0:3:2]),axis=1)).sum()
+    I_zz = (mass * np.sum(np.square(array[:,0:2:1]),axis=1)).sum()
+    I_xy = (-1 * mass * np.prod(array[:,0:2:1],axis=1)).sum()
+    I_yz = (-1 * mass * np.prod(array[:,1:3:1],axis=1)).sum()
+    I_xz = (-1 * mass * np.prod(array[:,0:3:2],axis=1)).sum()
     I = np.array([[I_xx, I_xy, I_xz],
 		  [I_xy, I_yy, I_yz],
 		  [I_xz, I_yz, I_zz]])
     return I
 
 
-def find_principal_axes(I):
+def find_principal_axes(array):
     """  This function finds the principal axes (I_a, I_b, I_c) by using
     diagonalizing the inertia tensor.
     """
-    eig_val, eig_vec = np.linalg.eigh(I)
+    eig_val, eig_vec = np.linalg.eigh(array)
     print("The eigen values are \n{:}\n".format(eig_val))
-    D = np.dot(np.dot(np.linalg.inv(eig_vec), I), eig_vec)
+    D = np.linalg.multi_dot([np.linalg.inv(eig_vec), array, eig_vec])
     D = np.around(D, decimals=4)
     return eig_vec, D, np.diag(D)
-
-
-####################################################
-def sympy_find_principal_axes(I):
-    I = sy.Matrix(I)
-    P, D = I.diagonalize(I)
-    print("The eigen values are \n{:}\n".format(P))
-    return P, D, np.diag(D)
-####################################################
 
 
 def calc_distance(coord):
@@ -234,7 +225,7 @@ def classify_molecule(I_abc):
 
 
 def visualization(CoM_coord, eig_vec, new_coord):
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8,8))
     ax = fig.add_subplot(111, projection='3d')
     vlen = np.linalg.norm(eig_vec)
     X, Y, Z = CoM_coord
@@ -244,6 +235,8 @@ def visualization(CoM_coord, eig_vec, new_coord):
 
     ax.scatter(new_coord[:,0], new_coord[:,1], new_coord[:,2],
                color="r", marker="o", s=50)
+    
+    ax.get_proj = lambda: np.dot(Axes3D.get_proj(ax), np.diag([0.75, 0.75, 1, 1]))
     ax.set_xlim([new_coord.min(),new_coord.max()])
     ax.set_ylim([new_coord.min(),new_coord.max()])
     ax.set_zlim([new_coord.min(),new_coord.max()])
@@ -264,14 +257,18 @@ def main(data_array):
           
     CoM_coord = calc_center_of_mass(data_array)
     print("Center of Mass = \n{:}\n".format(CoM_coord))
-
-    GC_coord = calc_geom_center(data_array)
-    print("Geometry Center = \n{:}\n".format(GC_coord))
-    print("overlap or not? {:}\n".format(np.allclose(CoM_coord, GC_coord, rtol=1e-4)))
     
     new_coord = data_array[:,1:] - CoM_coord
     print("shifted coordinates = \n{:}\n".format(np.column_stack((data_array[:,0],
                                                                   new_coord))))
+    CoM_coord = calc_center_of_mass(np.column_stack((data_array[:,0],
+                                                     new_coord)))
+    print("Center of Mass = \n{:}\n".format(CoM_coord))
+
+    GC_coord = calc_geom_center(new_coord)
+    print("Geometry Center = \n{:}\n".format(GC_coord))
+    print("overlap or not? {:}\n".format(np.allclose(CoM_coord, GC_coord, rtol=1e-6)))
+    
     I = calc_inertia_tensor(new_coord, data_array[:,0])
 ##    shifted_coord = new_coord - CoM_coord
 ##    I = calc_inertia_tensor(shifted_coord, data_array[:,0])
@@ -286,10 +283,10 @@ def main(data_array):
 ###############################################################################
 ###########################    examples for test    ###########################
 ## H2O
-a = [
-["O",    0.00000000,    0.00000000,   -0.11081188],
-["H",    0.00000000,   -0.78397589,    0.44324750],
-["H",   -0.00000000,    0.78397589,    0.44324750]]
+##a = [
+##["O",    0.00000000,    0.00000000,   -0.11081188],
+##["H",    0.00000000,   -0.78397589,    0.44324750],
+##["H",   -0.00000000,    0.78397589,    0.44324750]]
 
 
 #### H2O2
@@ -446,12 +443,12 @@ a = [
 
 
 #### additional test 3, CH4
-##a = [
-##["C",   0.00000000,   0.00000000,   0.00000000],
-##["H",   0.00000000,   0.00000000,   1.06999995],
-##["H",   0.00000000,  -1.00880563,  -0.35666665],
-##["H",  -0.87365130,   0.50440282,  -0.35666665],
-##["H",   0.87365130,   0.50440282,  -0.35666665]]
+a = [
+["C",   0.00000000,   0.00000000,   0.00000000],
+["H",   0.00000000,   0.00000000,   1.06999995],
+["H",   0.00000000,  -1.00880563,  -0.35666665],
+["H",  -0.87365130,   0.50440282,  -0.35666665],
+["H",   0.87365130,   0.50440282,  -0.35666665]]
 
 
 #### additional test 3, H+(H2O)3
