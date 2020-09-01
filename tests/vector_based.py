@@ -178,32 +178,33 @@ def symbol_to_mass(coord, periodic_table):
     return np.asfarray(coord)
 
 
-def calc_geom_center(data_array):
+def calc_geom_center(array):
     """  This function calculates the geometry center of a given data array.
     The format of the input data array is a two dimensional array, which
     contains the x, y, z Cartesion coordinates.
 
     parameters:
     ---------------------------
-    data_array:  the shifted coordinates (2D-array) of molecule.
+    array:  the shifted coordinates (2D-array) of the input molecule.
 
     It returns the coordinates of the geometry center (1-D array).
     """
-    return np.average(data_array[:,1:], axis=0)
+    return np.average(array, axis=0)
 
 
-def calc_center_of_mass(data_array):
+def calc_center_of_mass(array):
     """  This function calculates the center of mass of a given data array.
     The the input data array is a two dimensional array, containing the 
     x, y, z Cartesion coordinates and their corresponding mass values.
     
     parameters:
     ---------------------------
-    data_array:  the shifted coordinates (2D-array) of molecule.
+    array:    The (2D-array) contains atomic mass/number (the 1st column)
+            and the Cartesian coordinates of the input molecule.
 
     It returns the coordinates of the center of mass (1-D array).
     """
-    return np.average(data_array[:,1:], axis=0, weights=data_array[:,0])
+    return np.average(array[:,1:], axis=0, weights=array[:,0])
 
 
 def calc_distance(array1, array2):
@@ -334,7 +335,28 @@ def find_reflective_plane(data_array):
             print("\sigma_v")
 
 
+def visualization(CoM_coord, rot_vec, new_coord):
+    fig = plt.figure(figsize=(8,8))
+    ax = fig.add_subplot(111, projection='3d')
+    vlen = np.linalg.norm(eig_vec)
+    X, Y, Z = CoM_coord
+    U, V, W = rot_vec
+    ax.quiver(X, Y, Z, U, V, W, pivot='tail',
+              length=vlen, arrow_length_ratio=0.2/vlen)
 
+    ax.scatter(new_coord[:,0], new_coord[:,1], new_coord[:,2],
+               color="r", marker="o", s=50)
+    
+    ax.get_proj = lambda: np.dot(Axes3D.get_proj(ax), np.diag([0.75, 0.75, 1, 1]))
+    ax.set_xlim([new_coord.min(),new_coord.max()])
+    ax.set_ylim([new_coord.min(),new_coord.max()])
+    ax.set_zlim([new_coord.min(),new_coord.max()])
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+    plt.show()
+
+    
 def main(data_array):
     """
     workflow
@@ -351,14 +373,18 @@ def main(data_array):
     data_array = symbol_to_mass(data_array, periodic_table)
     CoM_coord  = calc_center_of_mass(data_array)
     print("Center of Mass = \n{:}\n".format(CoM_coord))
-
-    GC_coord = calc_geom_center(data_array, )
-    print("Geometry Center = \n{:}\n".format(GC_coord))
-    print("overlap or not? {:}\n".format(np.allclose(CoM_coord, GC_coord, rtol=1e-4)))
     
     new_coord = data_array[:,1:] - CoM_coord
     print("shifted coordinates = \n{:}\n".format(np.column_stack((data_array[:,0],
                                                                   new_coord))))
+
+    CoM_coord  = calc_center_of_mass(np.column_stack((data_array[:,0],
+                                                      new_coord)))
+    print("Center of Mass = \n{:}\n".format(CoM_coord))
+
+    GC_coord = calc_geom_center(new_coord)
+    print("Geometry Center = \n{:}\n".format(GC_coord))
+    print("overlap or not? {:}\n".format(np.allclose(CoM_coord, GC_coord, rtol=1e-4)))
     
     normal_vectors = np.cross(new_coord[:,np.newaxis,:],
                               new_coord[np.newaxis,:,:])
