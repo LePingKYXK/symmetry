@@ -270,14 +270,13 @@ def main(data_array):
     print("overlap or not? {:}\n".format(np.allclose(CoM_coord, GC_coord, rtol=1e-6)))
     
     I = calc_inertia_tensor(new_coord, data_array[:,0])
-##    shifted_coord = new_coord - CoM_coord
-##    I = calc_inertia_tensor(shifted_coord, data_array[:,0])
+    
     eig_vec, D, I_abc = find_principal_axes(I)
     mol_type = classify_molecule(I_abc)
     
     dist_matrix = calc_distance(np.row_stack((CoM_coord,new_coord)))
     return I, eig_vec, D, I_abc, mol_type, CoM_coord, new_coord, dist_matrix
-##    return I, eig_vec, D, I_abc, mol_type, CoM_coord, shifted_coord, dist_matrix
+
 
 
 ###############################################################################
@@ -536,7 +535,6 @@ a = [
 
 if __name__ == "__main__":
     I, eig_vec, D, I_abc, mol_type, CoM_coord, new_coord, dist_matrix = main(a)
-##    I, eig_vec, D, I_abc, mol_type, CoM_coord, shifted_coord, dist_matrix = main(a)
     print("The inertia_tensor I is \n{:}\n".format(I))
     print("The diagonalized I is \n{:}\n".format(D))
     print("The molecule is {:}".format(mol_type))
@@ -544,8 +542,5 @@ if __name__ == "__main__":
     print("The eigen vectors are \n{:}\n".format(eig_vec))
     print("The center of mass \n{:}\n".format(CoM_coord))
     print("The shifted coordinates \n{:}\n".format(new_coord))
-##    print("The center of mass \n{:}\n".format(CoM_coord - CoM_coord))
-##    print("The shifted coordinates \n{:}\n".format(shifted_coord))
     print("The distance matrix \n{:}\n".format(dist_matrix))
     visualization(CoM_coord, eig_vec, new_coord)
-##    visualization(CoM_coord - CoM_coord, eig_vec, shifted_coord)
