@@ -1,7 +1,35 @@
 #!/usr/bin/env python3
 
 from parse_coord import read_file, symbol_to_mass
+from plot_operators import visualization
+import argparse as ap
 import numpy as np
+
+
+parser = ap.ArgumentParser(
+            add_help=True,
+            formatter_class=ap.RawDescriptionHelpFormatter,
+            description="""
+	The aim of this Python3 script is for determining symmetry point group 
+of molecules.
+
+#########################  How to Use this script  ############################
+
+to see help:
+python calc_moment_of_inertia.py -h [OR --help]
+
+to run:
+python calc_moment_of_inertia.py PATH FILENAME
+
+#########################  Let's try it and enjoy! ############################
+""")
+
+parser.add_argument("-p", "--fpath", 
+                    action='store_true', help="input file path")
+parser.add_argument("-n", "--fname", 
+                    action='store_true', help="input file name")
+
+args = parser.parse_args()
 
 
 
@@ -133,7 +161,7 @@ def calc_geom_center(data_array):
     contains the x, y, z Cartesion coordinates.
     It returns a 1-D data array.
     """
-    return np.average(data_array[:,1:], axis=0)
+    return np.average(data_array, axis=0)
 
 
 def calc_center_of_mass(data_array):
@@ -145,34 +173,43 @@ def calc_center_of_mass(data_array):
     return np.average(data_array[:,1:], axis=0, weights=data_array[:,0])
 
 
-def calc_inertia_tensor(new_coord, mass):
+def calc_inertia_tensor(array, mass):
     """  This function calculates the Elements of inertia tensor for the
     moved centered coordinates.
     
     The structure of the array is a two dimensional array, which contains
     the mass of elements (the first column) and their corresponded x, y, z
     Cartesion coordinates.
+	
+	parameters:
+	------------------------------
+	array:    The shifted coordinates 
+	
     """
-    I_xx = (mass * np.sum(np.square(new_coord[:,1:3:1]),axis=1)).sum()
-    I_yy = (mass * np.sum(np.square(new_coord[:,0:3:2]),axis=1)).sum()
-    I_zz = (mass * np.sum(np.square(new_coord[:,0:2:1]),axis=1)).sum()
-    I_xy = (-1 * mass * np.prod(new_coord[:,0:2:1],axis=1)).sum()
-    I_yz = (-1 * mass * np.prod(new_coord[:,1:3:1],axis=1)).sum()
-    I_xz = (-1 * mass * np.prod(new_coord[:,0:3:2],axis=1)).sum()
+    I_xx = (mass * np.sum(np.square(array[:,1:3:1]),axis=1)).sum()
+    I_yy = (mass * np.sum(np.square(array[:,0:3:2]),axis=1)).sum()
+    I_zz = (mass * np.sum(np.square(array[:,0:2:1]),axis=1)).sum()
+    I_xy = (-1 * mass * np.prod(array[:,0:2:1],axis=1)).sum()
+    I_yz = (-1 * mass * np.prod(array[:,1:3:1],axis=1)).sum()
+    I_xz = (-1 * mass * np.prod(array[:,0:3:2],axis=1)).sum()
     I = np.array([[I_xx, I_xy, I_xz],
 		  [I_xy, I_yy, I_yz],
 		  [I_xz, I_yz, I_zz]])
     return I
 
 
-def find_principal_axes(I):
+def find_principal_axes(array):
     """  This function finds the principal axes (I_a, I_b, I_c) by using
     diagonalizing the inertia tensor.
+	
+	parameters:
+	------------------------------
+	array:    The tensor of the moment of inertia. 
     """
-    eig_val, eig_vec = np.linalg.eigh(I)
-    D = np.dot(np.dot(np.linalg.inv(eig_vec), I), eig_vec)
-    D = np.around(D, decimals=4)
-    return D, np.diag(D) 
+    eig_val, eig_vec = np.linalg.eigh(array)
+    D = np.linalg.multi_dot([np.linalg.inv(eig_vec), array, eig_vec])
+    D = np.around(D, decimals=6)
+    return eig_vec, D, np.diag(D) 
 
 
 def classify_molecule(I_abc):
@@ -194,6 +231,8 @@ def main():
     """
     filepath = input("Please Enter the Path of the Input file:\n")
     filename = input("Please Enter the File Name (e.g. H2O.gjf):\n")
+##    filepath = args.fpath
+##    filename = args.fname
     data_array = read_file(filepath, filename, periodic_table)
     print("Input coordinates = \n{:}\n".format(data_array))
     
@@ -201,25 +240,31 @@ def main():
     data_array = symbol_to_mass(data_array, periodic_table)
     CoM_coord = calc_center_of_mass(data_array)
     print("Center of Mass = \n{:}\n".format(CoM_coord))
-
-    GC_coord = calc_geom_center(data_array, )
-    print("Geometry Center = \n{:}\n".format(GC_coord))
-    print("overlap or not? {:}\n".format(np.allclose(CoM_coord, GC_coord, rtol=1e-4)))
     
     new_coord = data_array[:,1:] - CoM_coord
     print("shifted coordinates = \n{:}\n".format(np.column_stack((data_array[:,0],
                                                                   new_coord))))
+
+    CoM_coord = calc_center_of_mass(np.column_stack((data_array[:,0],
+                                                     new_coord)))
+    print("Center of Mass = \n{:}\n".format(CoM_coord))
+
+    GC_coord = calc_geom_center(new_coord)
+    print("Geometry Center = \n{:}\n".format(GC_coord))
+    print("overlap or not? {:}\n".format(np.allclose(CoM_coord, GC_coord, rtol=1e-4)))
+    
     I = calc_inertia_tensor(new_coord, data_array[:,0])
-    D, I_abc = find_principal_axes(I)
+    eig_vec, D, I_abc = find_principal_axes(I)
     mol_type = classify_molecule(I_abc)
-    return I, D, I_abc, mol_type
+    return CoM_coord, eig_vec, new_coord, I, D, I_abc, mol_type
 
 
 
 if __name__ == "__main__":
-    I, D, I_abc, mol_type = main()
+    CoM_coord, eig_vec, new_coord, I, D, I_abc, mol_type = main()
     print("The inertia_tensor I is \n{:}\n".format(I))
     print("The diagonalized I is \n{:}\n".format(np.diag(D)))
     print("The molecule is {:}".format(mol_type))
     print("I_a = {:}\nI_b = {:}\nI_c = {:}\n".format(*I_abc))
+    visualization(CoM_coord, eig_vec, new_coord)
     
