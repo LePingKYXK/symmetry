@@ -314,7 +314,14 @@ def find_circle_axis(array):
     return x
 
 
-def check_rotation_symm(ori_array, axis, n_fold):
+def search_rotation_axis(array):
+    """
+    """
+    return pass
+
+
+
+def find_rotation_symm(ori_array, axis, n_fold):
     """ This function checks whether the n-fold rotational symmetry exists by
     means of the Rotation method from the scipy.spatial.transform module.
 
@@ -546,22 +553,66 @@ def main(data_array):
                     return "planar and planar has \sigma_h and \sigma_v"#, count
         return "planar"#, np.nan
     
-    if find_circle_axis(new_coord):
-        
-        return 
-
-##    if find_reflective_plane(new_coord[1], new_coord[2], CoM_coord, "planar"):
-##        return "\sigma_v found"
-
-    
-##    return check_planar(new_coord, CoM_coord)
-##    return check_linear(new_coord)    
-##    return check_inversion(new_coord, data_array[:,0])
-#    return CoM_coord 
+    axis = search_rotation_axis(array):
+    if find_rotation_symm(ori_array, axis, n_fold)
+        return pass
 
 
-    
 
+## =================  pseudocode for determining point group =================
+##def determine_point_group(array):
+##    if check_linear(array):
+##        if check_inversion_center(array):
+##            return "$ D_{\infity h} $"
+##        return "$ C_{\infity v} $"
+##    
+##    if check_rotation(array):
+##        if count_axis >= 2:
+##            if count_C5:
+##                if check_inversion_center(array):
+##                    return "$ I_h $"
+##                else:
+##                    return "$ I $"
+##            else:    ## NO C5 axis
+##                if check_inversion_center(array):
+##                    return "$ O_h $"
+##                else:
+##                   return "$ O $"
+##            
+##        elif count_axis == 1:    ## ONLY One principal axis
+##            if count_C2:
+##                if check_planar(array):    ## a horizotal plane
+##                    return "$ D_{:}h $".format(n)
+##                elif :    ## a vertial plane ########### to do
+##                    return "$ D_{:}d $".format(n)
+##                else:
+##                    return "$ D_{:}$ ".format(n)
+##            elif count_C3:
+##                if check_planar(array):    ## a horizotal plane
+##                    return "$ T_{:}h $"
+##                elif :    ## a vertial plane $ \sigma_d $  ########## to do
+##                    return "$ T_{:}d $"
+##                else:
+##                    return "$ T_{:} $"
+##                
+##            else:    ### NO C2 axis perpendicular to th principal axis
+##                if check_planar(array):    ## a horizotal plane
+##                    return "$ C_{:}h $".format(n)
+##                elif :    ## a vertial plane $ \sigma_d $  ########## to do
+##                    return "$ C_{:}v $".format(n)
+##                elif check_inversion_center(array):    ## S_{2n}
+##                    return "$ S_2{:} $".format(n)
+##                else:
+##                    return "$ C_{:} $".format(n)
+##                
+##        else:    ## count_axis == 0, NO rotational axis
+##            if check_planar(array):
+##                return "$ C_s $"
+##            elif check_inversion_center(array):
+##                return "$ C_i $"
+##            else:
+##                return "$ C_1 $"
+## ## =========================================================================   
 
 
 
